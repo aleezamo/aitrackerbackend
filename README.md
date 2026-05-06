@@ -14,6 +14,16 @@ This backend receives tracking data when a user lands on a website via a link ci
 - Lightweight and easy to run locally
 - Designed to be self-hosted
 
+## How to self host
+- `git clone https://github.com/aleezamo/aitrackerbackend`
+- `cd aitrackerbackend`
+- `pip install -r requirements.txt`
+- set up PostgreSQL, make sure postgres is installed and run the following command:
+  - `psql -U USER_NAME -d DB_NAME -f schema.sql` 
+- make a copy of .env.example as .env and provide the values of the variables according to your setup.
+- `uvicorn app.main:app`
+
+
 ## Current Status
 The backend is fully functional for collecting and storing tracking data.
 
