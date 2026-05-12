@@ -20,6 +20,7 @@ class TrackEventRequest(BaseModel):
     hostName: str = Field(..., min_length=4)
     aiSource: str = Field(..., min_length=5)
     pathName: str = Field(..., min_length=1)
+    pageTitle: str = Field(..., min_length=0)
 
 @app.get("/healthcheck")
 def health():
@@ -32,6 +33,7 @@ def track_event(payload: TrackEventRequest, db: Session = Depends(get_db)):
         host_name=payload.hostName,
         ai_source=payload.aiSource,
         path_name=payload.pathName,
+        page_title=payload.pageTitle
     )
 
     db.add(event)

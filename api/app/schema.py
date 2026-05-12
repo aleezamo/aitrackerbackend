@@ -10,5 +10,6 @@ class AIEvent(Base):
     host_name = Column(Text, nullable=False)
     ai_source = Column(Text, nullable=False)
     path_name = Column(Text, nullable=False)
+    page_title = Column(Text, nullable=False)
 
     created_at = Column(TIMESTAMP, server_default=func.now())
