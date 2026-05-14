@@ -3,9 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title> <%=title%> </title>
+    <link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+  rel="stylesheet">
 </head>
 <body>
-    <h1> THIS IS MY DASHBOARD </h1>
+  <div class="container mt-4">
+  <div class="row g-3">
+
+    <div class="col-md-4">
+      <div class="border p-4 ">
+        Sources
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">AI Source </td>
+                    <th scope ="col">Page Views</td>
+                </tr>
+
+            </thead>
+            <tbody>
+              <% aiSources.forEach(function(aiSource) { %>
+
+                <tr>
+                    <td><%= aiSource.ai_source %></td>
+                    <td><%= aiSource.count %></td>
+                </tr>
+
+            <% }) %>
+            </tbody>
+
+        </table>
+      </div>
+      
+    </div>
+
+    <div class="col-md-4">
+      <div class="border p-4 text-center">
+        Box 2
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="border p-4 text-center">
+        Box 3
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+    </script>
 </body>
 </html>
