@@ -9,50 +9,53 @@
   rel="stylesheet">
 </head>
 <body>
+  <% if (duration=="1d") { %>
+     <a href="/?duration=1d" class="link-primary">1 day</a>
+  <% } else { %>
+      <a href="/?duration=1d" class="link-secondary">1 day</a>
+  <% }%>
+
+  <% if (duration!="1m" && duration!="1d" && duration!="14d") { %>
+     <a href="/?duration=7d" class="link-primary">7 days</a>
+  <% } else { %>
+      <a href="/?duration=7d" class="link-secondary">7 days</a>
+  <% }%>
+
+  <% if (duration=="14d") { %>
+     <a href="/?duration=14d" class="link-primary">14 days</a>
+  <% } else { %>
+      <a href="/?duration=14d" class="link-secondary">14 days</a>
+  <% }%>
+
+  <% if (duration=="1m") { %>
+     <a href="/?duration=1m" class="link-primary">1 month</a>
+  <% } else { %>
+      <a href="/?duration=1m" class="link-secondary">1 month</a>
+  <% }%>
+
+
   <div class="container mt-4">
-  <div class="row g-3">
+    <div class="row g-3">
+      <%- include('partials/analyticstable', {
+          title: 'AI Sources',
+          headers: ['Source', 'Count'],
+          rows: aiSources
+        }) %>
 
-    <div class="col-md-4">
-      <div class="border p-4 ">
-        Sources
-        <table class="table">
-            <thead>
-                <tr>
-                    <th scope="col">AI Source </td>
-                    <th scope ="col">Page Views</td>
-                </tr>
+      <%- include('partials/analyticstable', {
+        title: 'Top Pages',
+        headers: ['Page', 'Views'],
+        rows: pageTitles
+        }) %>
 
-            </thead>
-            <tbody>
-              <% aiSources.forEach(function(aiSource) { %>
-
-                <tr>
-                    <td><%= aiSource.ai_source %></td>
-                    <td><%= aiSource.count %></td>
-                </tr>
-
-            <% }) %>
-            </tbody>
-
-        </table>
-      </div>
-      
-    </div>
-
-    <div class="col-md-4">
-      <div class="border p-4 text-center">
-        Box 2
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="border p-4 text-center">
-        Box 3
-      </div>
-    </div>
+      <%- include('partials/analyticstable', {
+        title: 'Path Names',
+        headers: ['Path', 'Views'],
+        rows: pathNames
+        }) %>
 
   </div>
-</div>
+  </div>
 
 
     <script

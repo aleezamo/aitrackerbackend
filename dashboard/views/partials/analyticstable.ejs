@@ -1,0 +1,27 @@
+<div class="col-md-4">
+      <div class="border p-4 ">
+        <h3> <%= title %> </h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <% headers.forEach(header => { %>
+                        <th scope ="col"><%= header%> </th>
+                    <% }) %>
+
+                </tr>
+
+            </thead>
+            <tbody>
+              <% rows.forEach(row => { %>
+                <tr>
+                    <td><%= row.attribute %></td>
+                    <td><%= row.count %></td>
+                </tr>
+
+            <% }) %>
+            </tbody>
+
+        </table>
+      </div>
+      
+</div>
