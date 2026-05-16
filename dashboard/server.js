@@ -6,6 +6,13 @@ const port = 8000
 
 app.set("view engine", "ejs")
 
+app.use(express.static("public"));
+
+
+app.get('/', (req, res) => {
+  res.render("test");
+})
+
 app.get('/dashboard', async (req, res) => {
   try {
       const duration = req.query.duration;
