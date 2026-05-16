@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .database import Base, engine, get_db
-from .schema import AIEvent
+from .schema import AIEvent, Site
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
@@ -21,6 +21,7 @@ class TrackEventRequest(BaseModel):
     aiSource: str = Field(..., min_length=5)
     pathName: str = Field(..., min_length=1)
     pageTitle: str = Field(..., min_length=0)
+    siteID: int = Field(..., ge=1)
 
 @app.get("/healthcheck")
 def health():
@@ -28,9 +29,20 @@ def health():
 
 @app.post("/track")
 def track_event(payload: TrackEventRequest, db: Session = Depends(get_db)):
+    site = db.query(Site).filter(
+        Site.id== payload.siteID,
+        Site.domain == payload.hostName
+    ).first()
+
+    if not site:
+        raise HTTPException(
+            status_code=404,
+            detail="Site not found (invalid siteID or domain)"
+        ) 
+
 
     event = AIEvent(
-        host_name=payload.hostName,
+        site_id = site.id,
         ai_source=payload.aiSource,
         path_name=payload.pathName,
         page_title=payload.pageTitle

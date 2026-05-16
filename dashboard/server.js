@@ -6,7 +6,7 @@ const port = 8000
 
 app.set("view engine", "ejs")
 
-app.get('/', async (req, res) => {
+app.get('/dashboard', async (req, res) => {
   try {
       const duration = req.query.duration;
       let queryduration = '7 days';
@@ -14,7 +14,7 @@ app.get('/', async (req, res) => {
       if (duration=="1d") { queryduration = '1 day'; }
       else if (duration=="14d") { queryduration = '14 days';}
       else if (duration=="1m") {queryduration= '1 month';}
-      
+          
 
     const aiSourceResult = await pool.query(`SELECT ai_source as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' GROUP BY ai_source ORDER BY count DESC`);
     const titleResult = await pool.query(`SELECT page_title as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL '${queryduration}' GROUP BY page_title ORDER BY count DESC`);
