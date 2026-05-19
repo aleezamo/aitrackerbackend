@@ -13,19 +13,38 @@ app.get('/', (req, res) => {
   res.render("test");
 })
 
-app.get('/dashboard', async (req, res) => {
+app.get('/dashboard/:id', async (req, res) => {
   try {
-      const duration = req.query.duration;
-      let queryduration = '7 days';
+    const site_id = req.params.id;
 
-      if (duration=="1d") { queryduration = '1 day'; }
-      else if (duration=="14d") { queryduration = '14 days';}
-      else if (duration=="1m") {queryduration= '1 month';}
-          
+    if (isNaN(site_id)) {
+      return res.status(404).send('Invalid site id');
+    }
 
-    const aiSourceResult = await pool.query(`SELECT ai_source as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' GROUP BY ai_source ORDER BY count DESC`);
-    const titleResult = await pool.query(`SELECT page_title as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL '${queryduration}' GROUP BY page_title ORDER BY count DESC`);
-    const pathnameResult = await pool.query(`SELECT path_name as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' GROUP BY path_name ORDER BY count DESC`);
+    const siteResult = await pool.query(`SELECT id FROM ai_traffic_sites WHERE id = '${site_id}'`);
+    if (siteResult.rows.length === 0) {
+        return res.status(404).send('This domain was not found');
+
+    }
+
+
+    console.log("URL:", req.url);
+    console.log("params:", req.params);
+
+    //console.log(dashboardID);
+
+    const duration = req.query.duration;
+    let queryduration = '7 days';
+
+    if (duration=="1d") { queryduration = '1 day'; }
+    else if (duration=="14d") { queryduration = '14 days';}
+    else if (duration=="1m") {queryduration= '1 month';}
+    
+  
+
+    const aiSourceResult = await pool.query(`SELECT ai_source as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' and site_id = '${site_id}' GROUP BY ai_source ORDER BY count DESC`);
+    const titleResult = await pool.query(`SELECT page_title as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL '${queryduration}' and site_id = '${site_id}' GROUP BY page_title ORDER BY count DESC`);
+    const pathnameResult = await pool.query(`SELECT path_name as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' and site_id = '${site_id}' GROUP BY path_name ORDER BY count DESC`);
     res.render("dashboard", {
       title: "Dashboard", 
       aiSources: aiSourceResult.rows,
@@ -39,6 +58,18 @@ app.get('/dashboard', async (req, res) => {
     res.status(500).send('DB ERROR');
   }
   
+});
+
+
+app.get('/domains', async (req, res) => {
+  try {
+    const domains = await pool.query(`SELECT * from ai_traffic_sites`);
+    res.render("domains", {domains:domains.rows});
+  } catch (err) {
+      console.error(err);
+      res.status(500).send('DB ERROR')
+  }
+
 });
 
 app.listen(port, () => {
