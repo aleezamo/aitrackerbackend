@@ -8,14 +8,21 @@
           rel="stylesheet">
 </head>
 <body>
-    <div class="container">
+    <div class="container border">
+        <h1 style=>Sites</h1>         
+        <div class="card" style="width: 18rem; margin-top: 15px; margin-bottom: 15px">
+                <div class="card-body">
+                    <a href="/sites/add" class="card-link">+ Add a Site</a>
+                </div>
+            </div>
+
         <% domains.forEach(d => { %>
-            <div class="card" style="width: 18rem;">
+            <div class="card" style="width: 18rem; margin-top: 15px; margin-bottom: 15px;">
                 <div class="card-body">
                     <h5 class="card-title"><%= d.domain %> </h5>
                     <h6 class="card-subtitle mb-2 text-body-secondary"><%= new Date(d.created_at).toLocaleString() %></h6>
                     <p class="card-text"> </p>
-                    <a href="/dashboard/<%= d.id %>" class="card-link">Domain Dashboard</a>
+                    <a href="/sites/<%= d.id %>/dashboard" class="card-link">Dashboard</a>
                 </div>
             </div>
         <% }) %>

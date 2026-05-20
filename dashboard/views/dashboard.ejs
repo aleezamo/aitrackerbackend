@@ -10,28 +10,40 @@
 </head>
 <body>
   <div class="container">
+
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/sites">Sites</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><%=title%></li>
+      </ol>
+    </nav>
+
+    <div>
+      <h1>Dashboard</h1> 
+      <h2><%=site_name.domain%></h2> 
+    </div>
   <% if (duration=="1d") { %>
-     <a href="/dashboard?duration=1d" class="link-primary">1 day</a>
+     <a href="/sites/<%=site_id%>/dashboard/?duration=1d" class="link-primary">1 day</a>
   <% } else { %>
-      <a href="/dashboard?duration=1d" class="link-secondary">1 day</a>
+      <a href="/sites/<%=site_id%>/dashboard/?duration=1d" class="link-secondary">1 day</a>
   <% }%>
 
   <% if (duration!="1m" && duration!="1d" && duration!="14d") { %>
-     <a href="/dashboard?duration=7d" class="link-primary">7 days</a>
+     <a href="/sites/<%=site_id%>/dashboard/?duration=7d" class="link-primary">7 days</a>
   <% } else { %>
-      <a href="/dashboard?duration=7d" class="link-secondary">7 days</a>
+      <a href="/sites/<%=site_id%>/dashboard/?duration=7d" class="link-secondary">7 days</a>
   <% }%>
 
   <% if (duration=="14d") { %>
-     <a href="/dashboard?duration=14d" class="link-primary">14 days</a>
+     <a href="/sites/<%=site_id%>/dashboard/?duration=14d" class="link-primary">14 days</a>
   <% } else { %>
-      <a href="/dashboard?duration=14d" class="link-secondary">14 days</a>
+      <a href="/sites/<%=site_id%>/dashboard/?duration=14d" class="link-secondary">14 days</a>
   <% }%>
 
   <% if (duration=="1m") { %>
-     <a href="/dashboard?duration=1m" class="link-primary">1 month</a>
+     <a href="/sites/<%=site_id%>/dashboard/?duration=1m" class="link-primary">1 month</a>
   <% } else { %>
-      <a href="/dashboard?duration=1m" class="link-secondary">1 month</a>
+      <a href="/sites/<%=site_id%>/dashboard/?duration=1m" class="link-secondary">1 month</a>
   <% }%>
 
 

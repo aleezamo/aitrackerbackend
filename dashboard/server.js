@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
   res.render("test");
 })
 
-app.get('/dashboard/:id', async (req, res) => {
+app.get('/sites/:id/dashboard', async (req, res) => {
   try {
     const site_id = req.params.id;
 
@@ -21,10 +21,9 @@ app.get('/dashboard/:id', async (req, res) => {
       return res.status(404).send('Invalid site id');
     }
 
-    const siteResult = await pool.query(`SELECT id FROM ai_traffic_sites WHERE id = '${site_id}'`);
+    const siteResult = await pool.query(`SELECT id, domain FROM ai_traffic_sites WHERE id = '${site_id}'`);
     if (siteResult.rows.length === 0) {
         return res.status(404).send('This domain was not found');
-
     }
 
 
@@ -50,7 +49,9 @@ app.get('/dashboard/:id', async (req, res) => {
       aiSources: aiSourceResult.rows,
       pageTitles : titleResult.rows,
       pathNames: pathnameResult.rows,
-      duration: duration
+      duration: duration,
+      site_id: site_id,
+      site_name: siteResult.rows[0]
     });
 
   } catch (err) {
@@ -61,15 +62,19 @@ app.get('/dashboard/:id', async (req, res) => {
 });
 
 
-app.get('/domains', async (req, res) => {
+app.get('/sites', async (req, res) => {
   try {
     const domains = await pool.query(`SELECT * from ai_traffic_sites`);
-    res.render("domains", {domains:domains.rows});
+    res.render("sites", {domains:domains.rows});
   } catch (err) {
       console.error(err);
       res.status(500).send('DB ERROR')
   }
 
+});
+
+app.get('/sites/add', async (req, res) => {
+  res.render("addsite", {title: "Add a Site"})
 });
 
 app.listen(port, () => {
