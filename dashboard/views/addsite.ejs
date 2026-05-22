@@ -15,13 +15,19 @@
                 <li class="breadcrumb-item active" aria-current="page"><%=title%></li>
             </ol>
         </nav>
+        <% if (error!=null) { %>
+            <div class="alert alert-danger" role="alert">
+                <%= error %>
+            </div>
+        <% } %>
         <h1>Add a Site</h1>
         <p>Please enter your site's domain</p>
-        <form action="/sites/add" method="POST" >
+        <form method="POST" action="/sites/add">
             <div class="input-group mb-3">
-                <input type="text" class="form-control"placeholder="Domain" aria-label="Username" aria-describedby="basic-addon1">
+                <input name="domain" type="text" class="form-control" placeholder="Domain" aria-label="Domain" 
+                aria-describedby="basic-addon1">
             </div>
-            <button type="button" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
         </form>
 
     </div>

@@ -73,9 +73,46 @@ app.get('/sites', async (req, res) => {
 
 });
 
+function isValidDomain(domain) {
+  const regex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return regex.test(domain);
+}
+
 app.get('/sites/add', async (req, res) => {
-  res.render("addsite", {title: "Add a Site"})
+  res.render("addsite", {
+    title: "Add a Site", 
+    error:null,
+    oldValue: null});
 });
+
+app.use(express.urlencoded({ extended: true }));
+app.post('/sites/add', async (req, res) => {
+  const domain = req.body.domain;
+  if (!isValidDomain(domain)) {
+   return res.status(400).render("addsite", {
+      title: "Add a Site",
+      error: "Invalid domain format. Example: example.com",
+      oldValue: domain
+    });
+  }
+  console.log("Valid domain:", domain);
+  try {
+    await pool.query("INSERT INTO ai_traffic_sites (domain) VALUES ($1)", [domain])
+    res.redirect('/sites');
+  } catch (err) {
+    if (err.code === '23505') {
+        return res.status(400).render("addsite", {
+        title: "Add a Site",
+        error: "That domain already exists",
+        oldValue: null
+      });
+    }
+    console.error(err);
+    res.status(500).send("Database Error");
+  }
+  
+});
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

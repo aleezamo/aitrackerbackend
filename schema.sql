@@ -1,7 +1,7 @@
 -- AI Traffic Analytics Schema
 CREATE TABLE IF NOT EXISTS ai_traffic_sites (
     id BIGSERIAL PRIMARY KEY,
-    domain TEXT NOT NULL,
+    domain UNIQUE TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
