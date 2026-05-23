@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snippet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/sites">Sites</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Snippet</li>
+            </ol>
+        </nav>
+        <div class="code-box">
+            <div class="card" style="width: fit-content; padding: 1rem; padding-left: 2rem; padding-right: 2rem; margin-top: 15px; margin-bottom: 15px">
+                <h2>Add the following script tag inside the &lt;head&gt; of your HTML</h2>
+                <pre><code id="snippet">
+&lt;script src="https://cdn.jsdelivr.net/gh/aleezamo/aitracker/aitrackerscript.js"
+data-api-url="<%=api_url%>" data-site-id="<%= site_id %>" &gt;
+&lt;/script&gt;
+            </code></pre>
+            <button class="btn btn-primary" type="button" onclick="copySnippet()">Copy</button>
+
+            </div>
+        </div>
+
+ 
+
+    </div>
+
+    <script>
+        function copySnippet() {
+        const text = document.getElementById("snippet").innerText;
+
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied!");
+        }).catch(err => {
+        console.error("Copy failed:", err);
+        });
+}
+</script>
+    
+</body>
+</html>

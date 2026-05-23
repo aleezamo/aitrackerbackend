@@ -23,6 +23,7 @@
                     <h6 class="card-subtitle mb-2 text-body-secondary"><%= new Date(d.created_at).toLocaleString() %></h6>
                     <p class="card-text"> </p>
                     <a href="/sites/<%= d.id %>/dashboard" class="card-link">Dashboard</a>
+                    <a href="/sites/<%= d.id %>/snippet" class="card-link">Get Snippet</a>
                 </div>
             </div>
         <% }) %>

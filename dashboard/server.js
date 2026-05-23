@@ -17,10 +17,6 @@ app.get('/sites/:id/dashboard', async (req, res) => {
   try {
     const site_id = req.params.id;
 
-    if (isNaN(site_id)) {
-      return res.status(404).send('Invalid site id');
-    }
-
     const siteResult = await pool.query(`SELECT id, domain FROM ai_traffic_sites WHERE id = '${site_id}'`);
     if (siteResult.rows.length === 0) {
         return res.status(404).send('This domain was not found');
@@ -97,8 +93,9 @@ app.post('/sites/add', async (req, res) => {
   }
   console.log("Valid domain:", domain);
   try {
-    await pool.query("INSERT INTO ai_traffic_sites (domain) VALUES ($1)", [domain])
-    res.redirect('/sites');
+    const result = await pool.query("INSERT INTO ai_traffic_sites (domain) VALUES ($1) RETURNING id", [domain])
+    const siteID = result.rows[0].id
+    res.redirect(`/sites/${siteID}/snippet`);
   } catch (err) {
     if (err.code === '23505') {
         return res.status(400).render("addsite", {
@@ -113,6 +110,26 @@ app.post('/sites/add', async (req, res) => {
   
 });
 
+app.get('/sites/:id/snippet', async (req, res) => {
+  try {
+    const site_id = req.params.id;
+    const siteResult = await pool.query(`SELECT id, domain FROM ai_traffic_sites WHERE id = '${site_id}'`);
+    if (siteResult.rows.length === 0) {
+        return res.status(404).send('Invalid Site ID');
+    }
+
+    const apiUrl = `${req.protocol}://${req.get("host")}/track`;
+    res.render("snippet", {
+      site_id : site_id,
+      api_url: apiUrl
+
+    });
+  } catch(err) {
+    console.log(err);
+    res.status(500).send("Database Error");
+  }
+
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
