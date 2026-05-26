@@ -1,5 +1,6 @@
 const express = require('express')
 const pool = require('./db');
+const bcrypt = require('bcrypt');
 
 const app = express()
 const port = 8000
@@ -7,15 +8,92 @@ const port = 8000
 app.set("view engine", "ejs")
 
 app.use(express.static("public"));
+app.use(express.urlencoded({ extended: true }));
 
+
+function isValidEmail(email) {
+  const regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+  return regex.test(email);
+}
+
+function isValidPassword(password) {
+  if (password.length<4) {
+    return false;
+  }
+  else return true;
+}
 
 app.get('/', (req, res) => {
-  res.render("test");
+  res.render("test", {error: null});
 })
+
+app.get('/users/register', async (req, res) => {
+  res.render("register", {
+    error:null});
+});
+app.post('/users/register', async (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const hashedPassword = await bcrypt.hash(password,10);
+  
+  if (!isValidEmail(email)) {
+   return res.status(400).render("register", {error: "Invalid email format. Example: abc@test.com"});
+  }
+
+  if (!isValidPassword(password)) {
+    return res.status(400).render("register", {error: "Password must be at least 4 characters"});
+  }
+
+  
+  try {
+    const result = await pool.query("INSERT INTO users (email, password) VALUES ($1,$2) RETURNING id", [email,hashedPassword]);
+    res.redirect("/sites")
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+
+app.get('/users/login', async (req, res) => {
+  res.render("login", {
+    error:null});
+});
+
+app.post('/users/login', async (req, res) => {
+  res.render("login", {
+    error:null});
+});
+
+
+app.use(express.urlencoded({ extended: true }));
+app.post('/login', async (req, res) => {
+  const email = req.body.email;
+  const pwrod = req.body.password;
+  res.send(email)
+
+  // try {
+  //   const result = await pool.query("INSERT INTO users (username, pword) VALUES ($1, $2) RETURNING id", [domain])
+  //   const siteID = result.rows[0].id
+  //   res.redirect(`/sites/${siteID}/snippet`);
+  // } catch (err) {
+  //   if (err.code === '23505') {
+  //       return res.status(400).render("addsite", {
+  //       title: "Add a Site",
+  //       error: "That domain already exists",
+  //       oldValue: null
+  //     });
+  //   }
+  //   console.error(err);
+  //   res.status(500).send("Database Error");
+  // }
+  
+});
+
 
 app.get('/sites/:id/dashboard', async (req, res) => {
   try {
     const site_id = req.params.id;
+
 
     const siteResult = await pool.query(`SELECT id, domain FROM ai_traffic_sites WHERE id = '${site_id}'`);
     if (siteResult.rows.length === 0) {
@@ -81,7 +159,6 @@ app.get('/sites/add', async (req, res) => {
     oldValue: null});
 });
 
-app.use(express.urlencoded({ extended: true }));
 app.post('/sites/add', async (req, res) => {
   const domain = req.body.domain;
   if (!isValidDomain(domain)) {

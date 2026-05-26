@@ -5,6 +5,7 @@ from .database import Base, engine, get_db
 from .schema import AIEvent, Site
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
+from uuid import UUID
 app = FastAPI()
 
 app.add_middleware(
@@ -21,8 +22,7 @@ class TrackEventRequest(BaseModel):
     aiSource: str = Field(..., min_length=5)
     pathName: str = Field(..., min_length=1)
     pageTitle: str = Field(..., min_length=0)
-    siteID: int = Field(..., ge=1)
-
+    siteID: UUID
 @app.get("/healthcheck")
 def health():
     return {"status": "ok"}
