@@ -6,10 +6,25 @@
     <title>Domains</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
           rel="stylesheet">
+
+    <style>
+
+
+
+    </style>
 </head>
 <body>
+
     <div class="container border">
-        <h1 style=>Sites</h1>         
+        <div class="top-left-logout">
+            <form action="/users/logout" method="POST" style="display:inline;">
+                <button class="btn btn-primary" type="submit">Log Out</button>
+            </form>
+        </div> 
+
+        <h1 style=>Sites</h1>   
+
+
         <div class="card" style="width: 18rem; margin-top: 15px; margin-bottom: 15px">
                 <div class="card-body">
                     <a href="/sites/add" class="card-link">+ Add a Site</a>

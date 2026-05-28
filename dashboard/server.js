@@ -1,6 +1,10 @@
 const express = require('express')
 const pool = require('./db');
 const bcrypt = require('bcrypt');
+const session = require("express-session");
+
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const app = express()
 const port = 8000
@@ -31,6 +35,20 @@ app.get('/users/register', async (req, res) => {
   res.render("register", {
     error:null});
 });
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized:false, 
+    cookie: {
+      httpOnly: true,
+      secure: false,
+      maxAge: 1000*60*60*24*7
+    }
+  })
+)
+
 app.post('/users/register', async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -47,9 +65,18 @@ app.post('/users/register', async (req, res) => {
   
   try {
     const result = await pool.query("INSERT INTO users (email, password) VALUES ($1,$2) RETURNING id", [email,hashedPassword]);
+    req.session.userId = result.rows[0].id
+
     res.redirect("/sites")
   } catch (err) {
     console.log(err);
+    if (err.code="23505") {
+      return res.status(400).render("register", {error: "An account with this email already exists"});
+    }
+    else {
+      res.status(500).send("ERROR")
+    }
+
   }
 });
 
@@ -60,73 +87,89 @@ app.get('/users/login', async (req, res) => {
 });
 
 app.post('/users/login', async (req, res) => {
-  res.render("login", {
-    error:null});
-});
-
-
-app.use(express.urlencoded({ extended: true }));
-app.post('/login', async (req, res) => {
   const email = req.body.email;
-  const pwrod = req.body.password;
-  res.send(email)
+  const password = req.body.password;
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (result.rows.length === 0) {
+      return res.status(400).render("login", {error: "Invalid Credentials"});
+    }
+    const user = result.rows[0];
 
-  // try {
-  //   const result = await pool.query("INSERT INTO users (username, pword) VALUES ($1, $2) RETURNING id", [domain])
-  //   const siteID = result.rows[0].id
-  //   res.redirect(`/sites/${siteID}/snippet`);
-  // } catch (err) {
-  //   if (err.code === '23505') {
-  //       return res.status(400).render("addsite", {
-  //       title: "Add a Site",
-  //       error: "That domain already exists",
-  //       oldValue: null
-  //     });
-  //   }
-  //   console.error(err);
-  //   res.status(500).send("Database Error");
-  // }
-  
+    const validPassword = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!validPassword) {
+      return res.status(400).render("login", {error: "Invalid Credentials"});
+    }
+
+    req.session.userId = user.id;
+    res.redirect("/sites");
+  } catch (err) {
+    console.log(err);
+    res.status(500).send("DB ERROR");
+  }
 });
 
+app.post('/users/logout', async (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).send("Could not log out");
+    }
+
+    res.clearCookie("connect.sid"); // removes cookie from browser
+    res.redirect("/users/login");
+  });
+});
 
 app.get('/sites/:id/dashboard', async (req, res) => {
+  const userId = req.session.userId;
+    if (!userId) {
+      return res.redirect("/users/login")
+    }
+  
   try {
     const site_id = req.params.id;
+    const userId = req.session.userId;
 
 
-    const siteResult = await pool.query(`SELECT id, domain FROM ai_traffic_sites WHERE id = '${site_id}'`);
+    const siteResult = await pool.query(`SELECT s.id, domain FROM ai_traffic_sites s INNER JOIN users u ON u.id=s.user_id WHERE u.id= $1 and s.id = $2` ,[userId, site_id]);
     if (siteResult.rows.length === 0) {
-        return res.status(404).send('This domain was not found');
+        res.redirect("/sites");
+    }
+    else {
+      console.log("URL:", req.url);
+      console.log("params:", req.params);
+
+      //console.log(dashboardID);
+
+      const duration = req.query.duration;
+      let queryduration = '7 days';
+      if (duration=="1d") { queryduration = '1 day'; }
+      else if (duration=="14d") { queryduration = '14 days';}
+      else if (duration=="1m") {queryduration= '1 month';}
+          
+        
+
+      const aiSourceResult = await pool.query(`SELECT ai_source as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' and site_id = '${site_id}' GROUP BY ai_source ORDER BY count DESC`);
+      const titleResult = await pool.query(`SELECT page_title as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL '${queryduration}' and site_id = '${site_id}' GROUP BY page_title ORDER BY count DESC`);
+      const pathnameResult = await pool.query(`SELECT path_name as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' and site_id = '${site_id}' GROUP BY path_name ORDER BY count DESC`);
+      res.render("dashboard", {
+        title: "Dashboard", 
+        aiSources: aiSourceResult.rows,
+        pageTitles : titleResult.rows,
+        pathNames: pathnameResult.rows,
+        duration: duration,
+        site_id: site_id,
+        site_name: siteResult.rows[0]
+      });
     }
 
 
-    console.log("URL:", req.url);
-    console.log("params:", req.params);
-
-    //console.log(dashboardID);
-
-    const duration = req.query.duration;
-    let queryduration = '7 days';
-
-    if (duration=="1d") { queryduration = '1 day'; }
-    else if (duration=="14d") { queryduration = '14 days';}
-    else if (duration=="1m") {queryduration= '1 month';}
     
-  
-
-    const aiSourceResult = await pool.query(`SELECT ai_source as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' and site_id = '${site_id}' GROUP BY ai_source ORDER BY count DESC`);
-    const titleResult = await pool.query(`SELECT page_title as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL '${queryduration}' and site_id = '${site_id}' GROUP BY page_title ORDER BY count DESC`);
-    const pathnameResult = await pool.query(`SELECT path_name as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' and site_id = '${site_id}' GROUP BY path_name ORDER BY count DESC`);
-    res.render("dashboard", {
-      title: "Dashboard", 
-      aiSources: aiSourceResult.rows,
-      pageTitles : titleResult.rows,
-      pathNames: pathnameResult.rows,
-      duration: duration,
-      site_id: site_id,
-      site_name: siteResult.rows[0]
-    });
 
   } catch (err) {
     console.error(err);
@@ -138,7 +181,11 @@ app.get('/sites/:id/dashboard', async (req, res) => {
 
 app.get('/sites', async (req, res) => {
   try {
-    const domains = await pool.query(`SELECT * from ai_traffic_sites`);
+    const userId = req.session.userId;
+    if (!userId) {
+      return res.redirect("/users/login")
+    }
+    const domains = await pool.query(`SELECT * from ai_traffic_sites WHERE user_id=($1)`, [userId]);
     res.render("sites", {domains:domains.rows});
   } catch (err) {
       console.error(err);
@@ -153,14 +200,25 @@ function isValidDomain(domain) {
 }
 
 app.get('/sites/add', async (req, res) => {
-  res.render("addsite", {
+    const userId = req.session.userId;
+    if (!userId) {
+      return res.redirect("/users/login")
+    }
+
+    res.render("addsite", {
     title: "Add a Site", 
     error:null,
     oldValue: null});
+
 });
 
 app.post('/sites/add', async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+      return res.redirect("/users/login")
+  }
   const domain = req.body.domain;
+  const userID = req.session.userId
   if (!isValidDomain(domain)) {
    return res.status(400).render("addsite", {
       title: "Add a Site",
@@ -170,7 +228,7 @@ app.post('/sites/add', async (req, res) => {
   }
   console.log("Valid domain:", domain);
   try {
-    const result = await pool.query("INSERT INTO ai_traffic_sites (domain) VALUES ($1) RETURNING id", [domain])
+    const result = await pool.query("INSERT INTO ai_traffic_sites (domain, user_id) VALUES ($1, $2) RETURNING id", [domain, userID])
     const siteID = result.rows[0].id
     res.redirect(`/sites/${siteID}/snippet`);
   } catch (err) {
@@ -188,6 +246,10 @@ app.post('/sites/add', async (req, res) => {
 });
 
 app.get('/sites/:id/snippet', async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.redirect("/users/login")
+  }
   try {
     const site_id = req.params.id;
     const siteResult = await pool.query(`SELECT id, domain FROM ai_traffic_sites WHERE id = '${site_id}'`);
