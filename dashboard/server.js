@@ -138,9 +138,8 @@ app.get('/sites/:id/dashboard', async (req, res) => {
 
     const siteResult = await pool.query(`SELECT s.id, domain FROM ai_traffic_sites s INNER JOIN users u ON u.id=s.user_id WHERE u.id= $1 and s.id = $2` ,[userId, site_id]);
     if (siteResult.rows.length === 0) {
-        res.redirect("/sites");
+        return res.redirect("/sites");
     }
-    else {
       console.log("URL:", req.url);
       console.log("params:", req.params);
 
@@ -151,8 +150,6 @@ app.get('/sites/:id/dashboard', async (req, res) => {
       if (duration=="1d") { queryduration = '1 day'; }
       else if (duration=="14d") { queryduration = '14 days';}
       else if (duration=="1m") {queryduration= '1 month';}
-          
-        
 
       const aiSourceResult = await pool.query(`SELECT ai_source as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' and site_id = '${site_id}' GROUP BY ai_source ORDER BY count DESC`);
       const titleResult = await pool.query(`SELECT page_title as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL '${queryduration}' and site_id = '${site_id}' GROUP BY page_title ORDER BY count DESC`);
@@ -165,11 +162,7 @@ app.get('/sites/:id/dashboard', async (req, res) => {
         duration: duration,
         site_id: site_id,
         site_name: siteResult.rows[0]
-      });
-    }
-
-
-    
+      });    
 
   } catch (err) {
     console.error(err);
@@ -210,6 +203,37 @@ app.get('/sites/add', async (req, res) => {
     error:null,
     oldValue: null});
 
+});
+
+app.get('/charts/:id', async(req, res) => {
+  try {
+  const site_id = req.params.id;
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.send({"error": "User Session Not Found"})
+  }
+  const siteResult = await pool.query(`SELECT s.id, domain FROM ai_traffic_sites s INNER JOIN users u ON u.id=s.user_id WHERE u.id= $1 and s.id = $2` ,[userId, site_id]);
+  if (siteResult.rows.length === 0) {
+    return res.send({"error": "Site Not Found"})
+  }
+
+    const chartData = await pool.query(`SELECT d.day::date AS date, COUNT(a.*) AS event_count
+    FROM generate_series(
+    CURRENT_DATE - INTERVAL '29 days',
+    CURRENT_DATE,
+    INTERVAL '1 day'
+    ) AS d(day)
+    LEFT JOIN ai_traffic_events a
+    ON a.created_at::date = d.day
+    WHERE a.site_id=$1 OR a.site_id IS NULL
+    GROUP BY d.day
+    ORDER BY d.day `, [site_id]);
+
+    res.json(chartData.rows);
+  } catch (err) {
+      console.error(err);
+      res.status(500).send('DB ERROR')
+  }
 });
 
 app.post('/sites/add', async (req, res) => {
