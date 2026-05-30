@@ -147,9 +147,8 @@ app.get('/sites/:id/dashboard', async (req, res) => {
 
       const duration = req.query.duration;
       let queryduration = '7 days';
-      if (duration=="1d") { queryduration = '1 day'; }
-      else if (duration=="14d") { queryduration = '14 days';}
-      else if (duration=="1m") {queryduration= '1 month';}
+      if (duration=="24h") { queryduration = '24 hours'; }
+      else if (duration=="30d") {queryduration= '30 days';}
 
       const aiSourceResult = await pool.query(`SELECT ai_source as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL \'${queryduration} \' and site_id = '${site_id}' GROUP BY ai_source ORDER BY count DESC`);
       const titleResult = await pool.query(`SELECT page_title as attribute, COUNT(*) AS count from ai_traffic_events WHERE created_at >= CURRENT_DATE - INTERVAL '${queryduration}' and site_id = '${site_id}' GROUP BY page_title ORDER BY count DESC`);
@@ -217,9 +216,30 @@ app.get('/charts/:id', async(req, res) => {
     return res.send({"error": "Site Not Found"})
   }
 
-    const chartData = await pool.query(`SELECT d.day::date AS date, COUNT(a.*) AS event_count
+  const duration = req.query.duration;
+  let chartData = ""
+  if (duration==="24h") {
+    chartData = await pool.query(`SELECT d.hour, COUNT(a.*) AS event_count
+        FROM generate_series(
+        date_trunc('hour', NOW() - INTERVAL '24 hours'),
+        date_trunc('hour', NOW()),
+        INTERVAL '1 hour'
+        ) AS d(hour)
+        LEFT JOIN ai_traffic_events a
+        ON date_trunc('hour', a.created_at) = d.hour
+        AND a.site_id = $1
+        GROUP BY d.hour
+        ORDER BY d.hour;`, [site_id]);
+  }
+  else {
+    let days = "6 days"
+    if (duration==="30d") {
+      days = "29 days"
+    }
+    
+    chartData = await pool.query(`SELECT d.day::date AS date, COUNT(a.*) AS event_count
     FROM generate_series(
-    CURRENT_DATE - INTERVAL '29 days',
+    CURRENT_DATE - INTERVAL '${days}',
     CURRENT_DATE,
     INTERVAL '1 day'
     ) AS d(day)
@@ -227,7 +247,10 @@ app.get('/charts/:id', async(req, res) => {
     ON a.created_at::date = d.day
     WHERE a.site_id=$1 OR a.site_id IS NULL
     GROUP BY d.day
-    ORDER BY d.day `, [site_id]);
+    ORDER BY d.day`, [site_id]);
+  }
+
+    
 
     res.json(chartData.rows);
   } catch (err) {

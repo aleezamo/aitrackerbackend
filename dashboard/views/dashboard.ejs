@@ -26,34 +26,29 @@
       <h2><%=site_name.domain%></h2> 
     </div>
 
-  <% if (duration=="1d") { %>
-     <a href="/sites/<%=site_id%>/dashboard/?duration=1d" class="link-primary">1 day</a>
+  <% if (duration=="24h") { %>
+     <a href="/sites/<%=site_id%>/dashboard/?duration=24h" class="link-primary">24 hours</a>
   <% } else { %>
-      <a href="/sites/<%=site_id%>/dashboard/?duration=1d" class="link-secondary">1 day</a>
+      <a href="/sites/<%=site_id%>/dashboard/?duration=24h" class="link-secondary">24 hours</a>
   <% }%>
 
-  <% if (duration!="1m" && duration!="1d" && duration!="14d") { %>
+  <% if (duration!="30d" && duration!="24h") { %>
      <a href="/sites/<%=site_id%>/dashboard/?duration=7d" class="link-primary">7 days</a>
   <% } else { %>
       <a href="/sites/<%=site_id%>/dashboard/?duration=7d" class="link-secondary">7 days</a>
   <% }%>
 
-  <% if (duration=="14d") { %>
-     <a href="/sites/<%=site_id%>/dashboard/?duration=14d" class="link-primary">14 days</a>
-  <% } else { %>
-      <a href="/sites/<%=site_id%>/dashboard/?duration=14d" class="link-secondary">14 days</a>
-  <% }%>
 
-  <% if (duration=="1m") { %>
-     <a href="/sites/<%=site_id%>/dashboard/?duration=1m" class="link-primary">1 month</a>
+  <% if (duration=="30d") { %>
+     <a href="/sites/<%=site_id%>/dashboard/?duration=30d" class="link-primary">30 days</a>
   <% } else { %>
-      <a href="/sites/<%=site_id%>/dashboard/?duration=1m" class="link-secondary">1 month</a>
+      <a href="/sites/<%=site_id%>/dashboard/?duration=30d" class="link-secondary">30 days</a>
   <% }%>
 
 
   <div class="container mt-4">
-    <div style="position: relative; height:40vh; width:80vw">
-        <canvas id="myChart"></canvas>
+    <div style="position: relative;">
+        <canvas style="width: 80%; height: 60%" id="myChart"></canvas>
     </div>
 
     <div class="row g-3">
@@ -91,7 +86,7 @@
         console.err("Invalid UUID")
       }
 
-      fetch('http://localhost:8000/charts/' + uuid)
+      fetch('http://localhost:8000/charts/' + uuid + "?duration=<%=duration%>")
       .then(response => {
       // Check if the request was successful
       if (!response.ok) {
@@ -100,11 +95,22 @@
       return response.json(); // Parses the body content as JSON
       })
         .then(data => {
-          const dates = data.map(item => 
+          const days = "<%= duration %>";
+          let dates = [];
+          if ( days === "24h") {
+              dates = data.map(item => 
+              new Date(item.hour).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                hour12: true
+              }));
+          } else {
+            dates = data.map(item => 
               new Date(item.date).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric'
           }));
+          }
+            
           const counts = data.map(item => item.event_count)
           console.log(dates);
           console.log(counts);
@@ -120,14 +126,14 @@
   const ctx = document.getElementById('myChart');
 
     chart = new Chart(ctx, {
-      type: 'bar', // Options: 'line', 'pie', 'doughnut', etc.
+      type: 'line', // Options: 'line', 'pie', 'doughnut', etc.
       data: {
         labels: [],
         datasets: [{
           label: '# of AI Referrals',
           data: [],
-          backgroundColor: 'rgba(54, 162, 235, 0.2)', // Fill color (light blue)
-          borderColor: 'rgba(123, 0, 0, 1)',       // Line color (solid blue)
+          backgroundColor: 'rgba(199, 146, 223, 0.5)', // Fill color (light blue)
+          borderColor: 'rgba(199, 146, 223, 1)',       // Line color (solid blue)
           borderWidth: 2,
           borderWidth: 1
         }]
