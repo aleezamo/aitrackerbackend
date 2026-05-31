@@ -2,6 +2,7 @@ const express = require('express')
 const pool = require('./db');
 const bcrypt = require('bcrypt');
 const session = require("express-session");
+const expressLayouts = require("express-ejs-layouts");
 
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -13,7 +14,8 @@ app.set("view engine", "ejs")
 
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
-
+app.use(expressLayouts);
+app.set("layout","layouts/main")
 
 function isValidEmail(email) {
   const regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
@@ -82,13 +84,32 @@ app.post('/users/register', async (req, res) => {
 
 
 app.get('/users/login', async (req, res) => {
-  res.render("login", {
-    error:null});
+  res.render("login", {error:null});
 });
 
 app.post('/users/login', async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+
+  if (process.env.SELF_HOSTED == 1) {
+    if (email!==process.env.LOGIN_EMAIL || password!==process.env.LOGIN_PASSWORD) {
+      return res.status(400).render("login", {error: "Please use email and password defined in .env file!!"});
+  }
+  
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+      const result = await pool.query("INSERT INTO users (email, password) VALUES ($1, $2) ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id;", [email, hashedPassword]);
+      req.session.userId = result.rows[0].id;
+      return res.redirect("/sites");
+    } catch (err) {
+      console.log(err);
+      return res.status(500).send("DB ERROR");
+    }
+
+  }
+
   try {
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (result.rows.length === 0) {

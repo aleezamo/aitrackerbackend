@@ -1,11 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snippet</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-          rel="stylesheet">
 
         <style>
         body {
@@ -17,11 +9,9 @@
         height: 100vh;
         }
     </style>
-</head>
 
 
-<body>
-    <div class="container">
+
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/sites">Sites</a></li>
@@ -43,7 +33,7 @@ data-api-url="<%=api_url%>" data-site-id="<%= site_id %>" &gt;
 
  
 
-    </div>
+
 
     <script>
         function copySnippet() {
@@ -54,8 +44,6 @@ data-api-url="<%=api_url%>" data-site-id="<%= site_id %>" &gt;
         }).catch(err => {
         console.error("Copy failed:", err);
         });
-}
-</script>
+    }
+    </script>
     
-</body>
-</html>

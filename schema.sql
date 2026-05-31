@@ -9,9 +9,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE IF NOT EXISTS ai_traffic_sites (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    domain TEXT NOT NULL UNIQUE,
+    domain TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    user_id BIGINT NOT NULL REFERENCES users(id)
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    CONSTRAINT unique_user_domain UNIQUE (user_id, domain)
 );
 
 CREATE TABLE IF NOT EXISTS ai_traffic_events (
