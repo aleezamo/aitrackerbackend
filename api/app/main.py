@@ -29,10 +29,16 @@ def health():
 
 @app.post("/track")
 def track_event(payload: TrackEventRequest, db: Session = Depends(get_db)):
-    site = db.query(Site).filter(
-        Site.id== payload.siteID,
-        Site.domain == payload.hostName
-    ).first()
+    try:
+        site = db.query(Site).filter(
+            Site.id== payload.siteID,
+            Site.domain == payload.hostName
+        ).first()
+    except:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not connect to database"
+        )
 
     if not site:
         raise HTTPException(
