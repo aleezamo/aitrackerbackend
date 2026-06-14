@@ -34,9 +34,14 @@ app.get('/', (req, res) => {
 })
 
 app.get('/users/register', async (req, res) => {
+  if (process.env.SELF_HOSTED == 1) {
+    return res.redirect("/users/login");
+  }
+
   res.render("register", {
     error:null});
 });
+
 
 app.use(
   session({
@@ -52,6 +57,11 @@ app.use(
 )
 
 app.post('/users/register', async (req, res) => {
+
+  if (process.env.SELF_HOSTED == 1) {
+    return res.redirect("/users/login");
+  }
+
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = await bcrypt.hash(password,10);

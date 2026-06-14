@@ -93,6 +93,8 @@
       <button id="submitButton" class="btn btn-primary" type="submit">Login</button>
     </form>
 
-    <div class="footer">
+    <% if (process.env.SELF_HOSTED != 1) { %>
+      <div class="footer">
       Don't have an account? <a href="/users/register">Register</a>
     </div>
+    <% } %>
