@@ -298,14 +298,35 @@ app.post('/sites/add', async (req, res) => {
   const domain = req.body.domain;
   const userID = req.session.userId
   if (!isValidDomain(domain)) {
-   return res.status(400).render("addsite", {
+    return res.status(400).render("addsite", {
       title: "Add a Site",
       error: "Invalid domain format. Example: example.com",
       oldValue: domain
     });
   }
+
   console.log("Valid domain:", domain);
   try {
+    let duplicateFound = false;
+    if (domain.startsWith("www.")) {
+      const withWWW = await pool.query("SELECT domain FROM ai_traffic_sites where domain = $1", [domain.substring(4,domain.length)])
+      if (withWWW.rows.length === 1) {
+        duplicateFound = true;
+      }
+    }
+    else {
+      const withoutWWW = await pool.query("SELECT domain FROM ai_traffic_sites where domain = $1", ["www."+ domain]);
+      if (withoutWWW.rows.length === 1) {
+        duplicateFound = true;
+      }
+    }
+    if (duplicateFound) {
+      return res.status(400).render("addsite", {
+        title: "Add a Site",
+        error: "That domain already exists",
+        oldValue: null
+      });
+    }
     const result = await pool.query("INSERT INTO ai_traffic_sites (domain, user_id) VALUES ($1, $2) RETURNING id", [domain, userID])
     const siteID = result.rows[0].id
     res.redirect(`/sites/${siteID}/snippet`);
