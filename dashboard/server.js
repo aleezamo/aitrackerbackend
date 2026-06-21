@@ -29,10 +29,6 @@ function isValidPassword(password) {
   else return true;
 }
 
-app.get('/', (req, res) => {
-  res.render("test", {error: null});
-})
-
 app.get('/users/register', async (req, res) => {
   if (process.env.SELF_HOSTED == 1) {
     return res.redirect("/users/login");
