@@ -356,7 +356,8 @@ app.get('/sites/:id/snippet', async (req, res) => {
         return res.status(404).send('Invalid Site ID');
     }
 
-    const apiUrl = `${req.protocol}://${req.get("host")}/track`;
+    const host = req.headers.host;
+    const apiUrl = `${req.protocol}://${host}/track`;
     res.render("snippet", {
       site_id : site_id,
       api_url: apiUrl
