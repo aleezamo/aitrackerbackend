@@ -1,0 +1,9 @@
+app.aitraffic.app {
+    handle /track* {
+        reverse_proxy aitracker_api:3000
+    }
+
+    handle {
+        reverse_proxy aitracker_dashboard:8000
+    }
+}

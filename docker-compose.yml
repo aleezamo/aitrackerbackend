@@ -33,17 +33,21 @@ services:
       - aitracker_api
     restart: unless-stopped
 
-  nginx:
-    image: nginx:latest
-    container_name: nginx
+  services:
+  caddy:
+    image: caddy:2
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
-      - aitracker_api
       - aitracker_dashboard
-    restart: unless-stopped
+      - aitracker_api
 
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:
