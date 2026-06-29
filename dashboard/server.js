@@ -38,6 +38,7 @@ app.get('/users/register', async (req, res) => {
     error:null});
 });
 
+app.set("trust proxy", 1);
 
 app.use(
   session({
@@ -47,6 +48,7 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: true,
+      sameSite: "lax",
       maxAge: 1000*60*60*24*7
     }
   })
