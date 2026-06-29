@@ -33,7 +33,6 @@ services:
       - aitracker_api
     restart: unless-stopped
 
-  services:
   caddy:
     image: caddy:2
     ports:
